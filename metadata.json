@@ -1,0 +1,5 @@
+{
+  "name": "Netflix Clone",
+  "description": "A high-fidelity Netflix clone built with React, Vite, and Tailwind CSS, featuring a cinematic design system, movie rows, and an embedded YouTube player.",
+  "requestFramePermissions": []
+}
