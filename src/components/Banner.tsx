@@ -29,6 +29,7 @@ export default function Banner({ movie, onPlay, onInfo }: BannerProps) {
         <img
           src={movie.bannerImage}
           alt={movie.title}
+          loading="lazy"
           className={`w-full h-full object-cover transition-opacity duration-1000 ${showVideo ? 'opacity-0' : 'opacity-100'}`}
           referrerPolicy="no-referrer"
         />

@@ -4,17 +4,19 @@
  */
 
 import { useState } from 'react';
-import { MOVIES, Movie } from '../data/movies';
+import { Movie } from '../data/movies';
 import MovieCard from '../components/MovieCard';
 import FullPlayer from '../components/FullPlayer';
 import DetailModal from '../components/DetailModal';
+import { useMovies } from '../context/MovieContext';
 
 export default function MyList() {
+  const { movies } = useMovies();
   const [selectedMovie, setSelectedMovie] = useState<Movie | null>(null);
   const [selectedMovieForDetail, setSelectedMovieForDetail] = useState<Movie | null>(null);
   
   // For demo purposes, we'll just show all movies as "My List"
-  const myListMovies = MOVIES;
+  const myListMovies = movies;
 
   const handlePlay = (movie: Movie) => {
     setSelectedMovie(movie);

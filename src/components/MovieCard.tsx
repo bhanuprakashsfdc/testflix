@@ -41,6 +41,7 @@ export default function MovieCard({ movie, onPlay, onInfo }: MovieCardProps) {
       <img
         src={movie.thumbnail}
         alt={movie.title}
+        loading="lazy"
         className={`w-full h-full object-cover transition-opacity duration-300 ${showPreview ? 'opacity-0' : 'opacity-100'}`}
         referrerPolicy="no-referrer"
       />

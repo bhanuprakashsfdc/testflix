@@ -10,6 +10,7 @@ import Home from './pages/Home';
 import MyList from './pages/MyList';
 import ProfileSelection from './pages/ProfileSelection';
 import { AnimatePresence, motion } from 'motion/react';
+import { MovieProvider } from './context/MovieContext';
 
 function AppContent() {
   const location = useLocation();
@@ -98,8 +99,10 @@ function AppContent() {
 
 export default function App() {
   return (
-    <Router>
-      <AppContent />
-    </Router>
+    <MovieProvider>
+      <Router>
+        <AppContent />
+      </Router>
+    </MovieProvider>
   );
 }
