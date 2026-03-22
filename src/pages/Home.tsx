@@ -42,11 +42,13 @@ export default function Home() {
 
   return (
     <main className="relative pb-24">
-      <Banner 
-        movie={movies[0] || {} as Movie} 
-        onPlay={handlePlay} 
-        onInfo={handleInfo}
-      />
+      {movies.length > 0 && (
+        <Banner 
+          movie={movies[0]} 
+          onPlay={handlePlay} 
+          onInfo={handleInfo}
+        />
+      )}
       
       <div className="relative -mt-32 z-10 space-y-4">
         {continueWatching.length > 0 && (

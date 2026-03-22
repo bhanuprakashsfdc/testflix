@@ -24,7 +24,7 @@ export async function fetchMoviesFromSpreadsheet(): Promise<Movie[]> {
             description: row['Description'],
             thumbnail: row['Thumbnail'],
             bannerImage: row['Banner Image'],
-            youtubeUrl: row['YouTube URL'],
+            youtubeUrl: normalizeYoutubeUrl(row['YouTube URL']),
             category: row['Category'],
             year: row['Year'],
             rating: row['Rating'],
@@ -46,4 +46,12 @@ export async function fetchMoviesFromSpreadsheet(): Promise<Movie[]> {
     console.error('Error fetching movies from spreadsheet:', error);
     return [];
   }
+}
+
+function normalizeYoutubeUrl(url: string): string {
+  if (!url) return '';
+  const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
+  const match = url.match(regExp);
+  const videoId = (match && match[2].length === 11) ? match[2] : null;
+  return videoId ? `https://www.youtube.com/embed/${videoId}` : url;
 }

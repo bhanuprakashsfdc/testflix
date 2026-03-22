@@ -48,7 +48,7 @@ export default function DetailModal({ movie, onClose, onPlay }: DetailModalProps
           {/* Banner Section */}
           <div className="relative aspect-video w-full">
             <img
-              src={movie.bannerImage}
+              src={movie.bannerImage || undefined}
               alt={movie.title}
               loading="lazy"
               className="w-full h-full object-cover"
@@ -126,7 +126,7 @@ export default function DetailModal({ movie, onClose, onPlay }: DetailModalProps
                 <div key={m.id} className="bg-neutral-800 rounded-md overflow-hidden group cursor-pointer" onClick={() => onPlay(m)}>
                   <div className="relative aspect-video">
                     <img 
-                      src={m.thumbnail} 
+                      src={m.thumbnail || undefined} 
                       alt={m.title} 
                       loading="lazy"
                       className="w-full h-full object-cover" 

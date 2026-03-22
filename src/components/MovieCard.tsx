@@ -39,7 +39,7 @@ export default function MovieCard({ movie, onPlay, onInfo }: MovieCardProps) {
     >
       {/* Thumbnail */}
       <img
-        src={movie.thumbnail}
+        src={movie.thumbnail || undefined}
         alt={movie.title}
         loading="lazy"
         className={`w-full h-full object-cover transition-opacity duration-300 ${showPreview ? 'opacity-0' : 'opacity-100'}`}
@@ -50,7 +50,7 @@ export default function MovieCard({ movie, onPlay, onInfo }: MovieCardProps) {
       {showPreview && (
         <div className="absolute inset-0 bg-black">
           <iframe
-            src={`${movie.youtubeUrl}?autoplay=1&mute=1&controls=0&loop=1&playlist=${movie.youtubeUrl.split('/').pop()}&rel=0`}
+            src={`${movie.youtubeUrl}?autoplay=1&mute=1&controls=0&loop=1&playlist=${movie.youtubeUrl.split('/').pop()?.split('?')[0]}&rel=0`}
             className="w-full h-full pointer-events-none scale-150"
             allow="autoplay"
           />

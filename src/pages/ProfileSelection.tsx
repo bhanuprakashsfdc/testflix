@@ -42,7 +42,7 @@ export default function ProfileSelection() {
           >
             <div className="relative aspect-square w-full max-w-[160px] overflow-hidden rounded-xl transition-all duration-200 shadow-xl group-hover:ring-4 group-hover:ring-on-surface">
               <img
-                src={profile.avatar}
+                src={profile.avatar || undefined}
                 alt={profile.name}
                 className="w-full h-full object-cover"
                 referrerPolicy="no-referrer"
