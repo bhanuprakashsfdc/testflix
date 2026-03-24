@@ -4,9 +4,10 @@
  */
 
 import { X, Play, Plus, ThumbsUp, Volume2 } from 'lucide-react';
-import { Movie, MOVIES } from '../data/movies';
+import { Movie } from '../data/movies';
 import { motion, AnimatePresence } from 'motion/react';
 import MovieCard from './MovieCard';
+import { useMovies } from '../context/MovieContext';
 
 interface DetailModalProps {
   movie: Movie | null;
@@ -15,9 +16,10 @@ interface DetailModalProps {
 }
 
 export default function DetailModal({ movie, onClose, onPlay }: DetailModalProps) {
+  const { movies } = useMovies();
   if (!movie) return null;
 
-  const relatedMovies = MOVIES.filter(m => m.category === movie.category && m.id !== movie.id).slice(0, 6);
+  const relatedMovies = movies.filter(m => m.category === movie.category && m.id !== movie.id).slice(0, 6);
 
   return (
     <AnimatePresence>
@@ -46,8 +48,9 @@ export default function DetailModal({ movie, onClose, onPlay }: DetailModalProps
           {/* Banner Section */}
           <div className="relative aspect-video w-full">
             <img
-              src={movie.bannerImage}
+              src={movie.bannerImage || undefined}
               alt={movie.title}
+              loading="lazy"
               className="w-full h-full object-cover"
               referrerPolicy="no-referrer"
             />
@@ -122,7 +125,13 @@ export default function DetailModal({ movie, onClose, onPlay }: DetailModalProps
               {relatedMovies.map(m => (
                 <div key={m.id} className="bg-neutral-800 rounded-md overflow-hidden group cursor-pointer" onClick={() => onPlay(m)}>
                   <div className="relative aspect-video">
-                    <img src={m.thumbnail} alt={m.title} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+                    <img 
+                      src={m.thumbnail || undefined} 
+                      alt={m.title} 
+                      loading="lazy"
+                      className="w-full h-full object-cover" 
+                      referrerPolicy="no-referrer" 
+                    />
                     <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                       <Play className="w-10 h-10 text-white fill-current" />
                     </div>

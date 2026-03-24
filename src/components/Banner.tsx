@@ -27,8 +27,9 @@ export default function Banner({ movie, onPlay, onInfo }: BannerProps) {
       {/* Background Image / Video */}
       <div className="absolute inset-0">
         <img
-          src={movie.bannerImage}
+          src={movie.bannerImage || undefined}
           alt={movie.title}
+          loading="lazy"
           className={`w-full h-full object-cover transition-opacity duration-1000 ${showVideo ? 'opacity-0' : 'opacity-100'}`}
           referrerPolicy="no-referrer"
         />
@@ -36,7 +37,7 @@ export default function Banner({ movie, onPlay, onInfo }: BannerProps) {
         {showVideo && (
           <div className="absolute inset-0 bg-black">
             <iframe
-              src={`${movie.youtubeUrl}?autoplay=1&mute=${isMuted ? 1 : 0}&controls=0&loop=1&playlist=${movie.youtubeUrl.split('/').pop()}&rel=0&modestbranding=1`}
+              src={`${movie.youtubeUrl}?autoplay=1&mute=${isMuted ? 1 : 0}&controls=0&loop=1&playlist=${movie.youtubeUrl.split('/').pop()?.split('?')[0]}&rel=0&modestbranding=1`}
               className="w-full h-full scale-[1.5] pointer-events-none"
               allow="autoplay"
             />
