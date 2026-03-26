@@ -38,8 +38,15 @@ export default function Footer() {
           Service Code
         </button>
         
+        {/* Copyright Disclaimer */}
+        <div className="mb-4 p-3 bg-surface-container rounded-lg border border-white/5">
+          <p className="text-xs text-on-surface-variant leading-relaxed">
+            <strong className="text-white">Disclaimer:</strong> All videos displayed on this website are fetched from YouTube and are not hosted on our servers. We do not own, claim, or have any rights to the content. All videos belong to their respective owners and are shared for educational purposes only. If you own the content and wish to have it removed, please contact us.
+          </p>
+        </div>
+        
         <p className="text-[11px] text-on-surface-variant/60">
-          © 1997-2026 Netflix, Inc.
+          © 1997-2026 TestFlix, Inc.
         </p>
       </div>
     </footer>
