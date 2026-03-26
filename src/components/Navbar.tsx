@@ -32,12 +32,15 @@ export default function Navbar() {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  // Filter movies based on search query
+  // Filter movies based on search query (title, genres, or cast)
   useEffect(() => {
     if (searchQuery.trim().length > 0) {
+      const query = searchQuery.toLowerCase();
       const filtered = movies.filter(movie =>
-        movie.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        movie.genres.some(g => g.toLowerCase().includes(searchQuery.toLowerCase()))
+        movie.title.toLowerCase().includes(query) ||
+        movie.genres.some(g => g.toLowerCase().includes(query)) ||
+        movie.cast.some(c => c.toLowerCase().includes(query)) ||
+        (movie.director && movie.director.toLowerCase().includes(query))
       ).slice(0, 6);
       setSearchResults(filtered);
       setShowSuggestions(true);

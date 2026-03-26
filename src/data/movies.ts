@@ -21,6 +21,7 @@ export interface Movie {
   genres: string[];
   cast: string[];
   language?: string;
+  director?: string;
 }
 
 export const MOVIES: Movie[] = [];

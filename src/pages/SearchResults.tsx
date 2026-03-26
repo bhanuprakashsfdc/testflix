@@ -20,7 +20,7 @@ export default function SearchResults() {
   const [selectedMovie, setSelectedMovie] = useState<Movie | null>(null);
   const [selectedMovieForDetail, setSelectedMovieForDetail] = useState<Movie | null>(null);
 
-  // Filter movies based on search query
+  // Filter movies based on search query (title, genres, cast, director, category, year)
   const searchResults = useMemo(() => {
     if (!query.trim()) return [];
     
@@ -29,6 +29,7 @@ export default function SearchResults() {
       movie.title.toLowerCase().includes(q) ||
       movie.genres.some(g => g.toLowerCase().includes(q)) ||
       movie.cast.some(c => c.toLowerCase().includes(q)) ||
+      (movie.director && movie.director.toLowerCase().includes(q)) ||
       movie.category.toLowerCase().includes(q) ||
       movie.year.includes(q)
     );
@@ -40,6 +41,7 @@ export default function SearchResults() {
       'Matching Titles': [],
       'Genres': [],
       'Cast & Crew': [],
+      'Directors': [],
       'Categories': []
     };
     
@@ -52,6 +54,15 @@ export default function SearchResults() {
       const matchingGenres = movie.genres.filter(g => g.toLowerCase().includes(query.toLowerCase()));
       if (matchingGenres.length > 0) {
         categories['Genres'].push(movie);
+      }
+      // Check cast
+      const matchingCast = movie.cast.filter(c => c.toLowerCase().includes(query.toLowerCase()));
+      if (matchingCast.length > 0) {
+        categories['Cast & Crew'].push(movie);
+      }
+      // Check director
+      if (movie.director && movie.director.toLowerCase().includes(query.toLowerCase())) {
+        categories['Directors'].push(movie);
       }
       // Add to categories section
       categories['Categories'].push(movie);
