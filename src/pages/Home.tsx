@@ -110,11 +110,19 @@ export default function Home() {
   };
 
   const handleVideoEnd = (currentMovie: Movie) => {
-    // Find next movie from shuffled rows
+    // Only auto-play next for movies, not for songs
+    const isMovie = (currentMovie.type || '').toLowerCase().includes('movie') || 
+                    (currentMovie.type || '').toLowerCase().includes('film');
+    
+    if (!isMovie) return; // Skip auto-play for songs
+    
+    // Find next movie from shuffled rows (only movies)
     const allMovies: Movie[] = [];
     shuffledRows.forEach(row => {
       row.movies.forEach(m => {
-        if (!allMovies.find(x => x.id === m.id)) {
+        const mType = (m.type || '').toLowerCase();
+        const isMovieType = mType.includes('movie') || mType.includes('film');
+        if (isMovieType && !allMovies.find(x => x.id === m.id)) {
           allMovies.push(m);
         }
       });

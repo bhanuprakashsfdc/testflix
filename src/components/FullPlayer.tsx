@@ -46,7 +46,7 @@ export default function FullPlayer({ movie, onClose, onVideoEnd }: FullPlayerPro
     }
   }, [movie]);
 
-  // Auto-play next video after 1 minute
+  // Auto-play logic based on content type
   useEffect(() => {
     if (movie && onVideoEnd) {
       // Clear any existing timeout
@@ -54,7 +54,13 @@ export default function FullPlayer({ movie, onClose, onVideoEnd }: FullPlayerPro
         clearTimeout(autoPlayTimeoutRef.current);
       }
       
-      // Set auto-play after 60 seconds (1 minute)
+      // Determine timeout based on content type
+      const isMovie = (movie.type || '').toLowerCase().includes('movie') || 
+                      (movie.type || '').toLowerCase().includes('film');
+      
+      // Movies: auto-play after 60 seconds | Songs: auto-play after 30 seconds
+      const autoPlayDelay = isMovie ? 60000 : 30000;
+      
       autoPlayTimeoutRef.current = setTimeout(() => {
         if (currentMovieRef.current && onVideoEnd) {
           setShowNextVideoPrompt(true);
@@ -63,7 +69,7 @@ export default function FullPlayer({ movie, onClose, onVideoEnd }: FullPlayerPro
             onVideoEnd(currentMovieRef.current!);
           }, 3000);
         }
-      }, 60000);
+      }, autoPlayDelay);
       
       return () => {
         if (autoPlayTimeoutRef.current) {
