@@ -22,8 +22,8 @@ export default function ProfileSelection() {
   return (
     <main className="min-h-screen flex flex-col items-center justify-center bg-background px-6">
       <header className="fixed top-0 w-full z-50 h-20 flex items-center justify-center">
-        <div className="text-3xl font-black text-red-600 uppercase tracking-tighter font-headline">
-          NETFLIX
+        <div className="text-3xl font-black text-primary tracking-tighter uppercase font-headline">
+          TESTFLIX
         </div>
       </header>
 

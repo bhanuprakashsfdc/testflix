@@ -5,7 +5,7 @@
 
 import { Movie } from '../data/movies';
 
-const WATCH_HISTORY_KEY = 'netflix_clone_watch_history';
+const WATCH_HISTORY_KEY = 'testflix_watch_history';
 
 export interface WatchProgress {
   movieId: string;

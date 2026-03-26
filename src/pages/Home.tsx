@@ -28,6 +28,10 @@ export default function Home() {
   const trendingMovies = movies.filter(m => m.category === 'Trending Now');
   const actionMovies = movies.filter(m => m.category === 'Action Movies');
   const topRatedMovies = movies.filter(m => m.category === 'Top Rated');
+  const newPopularMovies = [...movies].sort((a, b) => parseInt(b.year) - parseInt(a.year));
+  const songMovies = movies.filter(m => m.type === 'Song' || m.type === 'Music');
+  const tvShows = movies.filter(m => m.type === 'TV Show');
+  const movieType = movies.filter(m => m.type === 'Movie');
 
   const handlePlay = (movie: Movie) => {
     setSelectedMovie(movie);
@@ -36,6 +40,16 @@ export default function Home() {
 
   const handleInfo = (movie: Movie) => {
     setSelectedMovieForDetail(movie);
+  };
+
+  const handleVideoEnd = (currentMovie: Movie) => {
+    // Find next movie in the same category or genre
+    const allMovies = [...trendingMovies, ...actionMovies, ...topRatedMovies, ...newPopularMovies, ...songMovies, ...tvShows, ...movieType];
+    const currentIndex = allMovies.findIndex(m => m.id === currentMovie.id);
+    if (currentIndex >= 0 && currentIndex < allMovies.length - 1) {
+      const nextMovie = allMovies[currentIndex + 1];
+      setSelectedMovie(nextMovie);
+    }
   };
 
   if (loading) return <LoadingSpinner />;
@@ -50,7 +64,7 @@ export default function Home() {
         />
       )}
       
-      <div className="relative -mt-32 z-10 space-y-4">
+      <div className="relative mt-4 z-10 space-y-4">
         {continueWatching.length > 0 && (
           <MovieRow 
             title="Continue Watching" 
@@ -77,6 +91,38 @@ export default function Home() {
           onPlay={handlePlay} 
           onInfo={handleInfo}
         />
+        {newPopularMovies.length > 0 && (
+          <MovieRow 
+            title="New & Popular" 
+            movies={newPopularMovies.slice(0, 10)} 
+            onPlay={handlePlay} 
+            onInfo={handleInfo}
+          />
+        )}
+        {songMovies.length > 0 && (
+          <MovieRow 
+            title="Songs" 
+            movies={songMovies} 
+            onPlay={handlePlay} 
+            onInfo={handleInfo}
+          />
+        )}
+        {tvShows.length > 0 && (
+          <MovieRow 
+            title="TV Shows" 
+            movies={tvShows} 
+            onPlay={handlePlay} 
+            onInfo={handleInfo}
+          />
+        )}
+        {movieType.length > 0 && (
+          <MovieRow 
+            title="Movies" 
+            movies={movieType} 
+            onPlay={handlePlay} 
+            onInfo={handleInfo}
+          />
+        )}
       </div>
 
       <FullPlayer 
@@ -86,6 +132,7 @@ export default function Home() {
           // Refresh continue watching list
           setContinueWatching(getContinueWatchingMovies(movies));
         }} 
+        onVideoEnd={handleVideoEnd}
       />
 
       <DetailModal
