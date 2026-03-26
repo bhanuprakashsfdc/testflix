@@ -12,6 +12,7 @@ import { saveWatchProgress } from '../utils/watchHistory';
 interface FullPlayerProps {
   movie: Movie | null;
   onClose: () => void;
+  onVideoEnd?: (currentMovie: Movie) => void;
 }
 
 declare global {
@@ -21,17 +22,123 @@ declare global {
   }
 }
 
-export default function FullPlayer({ movie, onClose }: FullPlayerProps) {
+export default function FullPlayer({ movie, onClose, onVideoEnd }: FullPlayerProps) {
   const [showControls, setShowControls] = useState(true);
   const [isPlaying, setIsPlaying] = useState(true);
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
   const [volume, setVolume] = useState(100);
   const [isMuted, setIsMuted] = useState(false);
+  const [externalVideoUrl, setExternalVideoUrl] = useState('');
+  const [showSettings, setShowSettings] = useState(false);
+  const [showNextVideoPrompt, setShowNextVideoPrompt] = useState(false);
   const controlsTimeout = useRef<NodeJS.Timeout | null>(null);
   const playerRef = useRef<any>(null);
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const progressInterval = useRef<NodeJS.Timeout | null>(null);
+  const autoPlayTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const currentMovieRef = useRef<Movie | null>(null);
+
+  // Store current movie for auto-play
+  useEffect(() => {
+    if (movie) {
+      currentMovieRef.current = movie;
+    }
+  }, [movie]);
+
+  // Auto-play next video after 1 minute
+  useEffect(() => {
+    if (movie && onVideoEnd) {
+      // Clear any existing timeout
+      if (autoPlayTimeoutRef.current) {
+        clearTimeout(autoPlayTimeoutRef.current);
+      }
+      
+      // Set auto-play after 60 seconds (1 minute)
+      autoPlayTimeoutRef.current = setTimeout(() => {
+        if (currentMovieRef.current && onVideoEnd) {
+          setShowNextVideoPrompt(true);
+          // Auto-advance after showing prompt for 3 seconds
+          setTimeout(() => {
+            onVideoEnd(currentMovieRef.current!);
+          }, 3000);
+        }
+      }, 60000);
+      
+      return () => {
+        if (autoPlayTimeoutRef.current) {
+          clearTimeout(autoPlayTimeoutRef.current);
+        }
+      };
+    }
+  }, [movie, onVideoEnd]);
+
+  // Keyboard controls
+  useEffect(() => {
+    if (!movie) return;
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      switch (e.key) {
+        case 'ArrowRight':
+          // Skip forward 10 seconds
+          if (playerRef.current) {
+            const newTime = playerRef.current.getCurrentTime() + 10;
+            playerRef.current.seekTo(newTime, true);
+          }
+          break;
+        case 'ArrowLeft':
+          // Skip backward 10 seconds
+          if (playerRef.current) {
+            const newTime = playerRef.current.getCurrentTime() - 10;
+            playerRef.current.seekTo(Math.max(0, newTime), true);
+          }
+          break;
+        case 'ArrowUp':
+          // Increase volume
+          e.preventDefault();
+          if (playerRef.current) {
+            const newVolume = Math.min(100, volume + 10);
+            playerRef.current.setVolume(newVolume);
+            setVolume(newVolume);
+            if (newVolume > 0) setIsMuted(false);
+          }
+          break;
+        case 'ArrowDown':
+          // Decrease volume
+          e.preventDefault();
+          if (playerRef.current) {
+            const newVolume = Math.max(0, volume - 10);
+            playerRef.current.setVolume(newVolume);
+            setVolume(newVolume);
+            if (newVolume === 0) setIsMuted(true);
+          }
+          break;
+        case ' ':
+        case 'k':
+          // Toggle play/pause
+          e.preventDefault();
+          togglePlay();
+          break;
+        case 'm':
+          // Toggle mute
+          toggleMute(e as any);
+          break;
+        case 'f':
+          // Toggle fullscreen
+          if (document.fullscreenElement) {
+            document.exitFullscreen();
+          } else {
+            document.documentElement.requestFullscreen();
+          }
+          break;
+        default:
+          break;
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [movie, volume]);
 
   // Load YouTube API
   useEffect(() => {
@@ -74,8 +181,11 @@ export default function FullPlayer({ movie, onClose }: FullPlayerProps) {
       return (match && match[2].length === 11) ? match[2] : null;
     };
 
-    const videoId = getYoutubeId(movie.youtubeUrl);
+    const videoId = movie.youtubeUrl ? getYoutubeId(movie.youtubeUrl) : null;
     if (!videoId) return;
+
+    // Check if we should use external video URL
+    const isExternalVideo = movie.videoUrl && !videoId;
     
     const initPlayer = () => {
       playerRef.current = new window.YT.Player('youtube-player', {
@@ -123,6 +233,15 @@ export default function FullPlayer({ movie, onClose }: FullPlayerProps) {
         playerRef.current.destroy();
       }
     };
+  }, [movie]);
+
+  // Set external video URL when movie changes
+  useEffect(() => {
+    if (movie?.videoUrl && !movie.youtubeUrl) {
+      setExternalVideoUrl(movie.videoUrl);
+    } else {
+      setExternalVideoUrl('');
+    }
   }, [movie]);
 
   const togglePlay = (e?: MouseEvent) => {
@@ -205,7 +324,17 @@ export default function FullPlayer({ movie, onClose }: FullPlayerProps) {
       >
         {/* The Video Container */}
         <div className="absolute inset-0 w-full h-full pointer-events-none">
-          <div id="youtube-player" className="w-full h-full scale-[1.35]"></div>
+          {externalVideoUrl ? (
+            <iframe
+              key={externalVideoUrl}
+              src={externalVideoUrl}
+              className="w-full h-full"
+              allow="autoplay; fullscreen"
+              allowFullScreen
+            />
+          ) : (
+            <div id="youtube-player" className="w-full h-full"></div>
+          )}
         </div>
 
         {/* Custom Controls Overlay */}
@@ -224,7 +353,29 @@ export default function FullPlayer({ movie, onClose }: FullPlayerProps) {
             </button>
             
             <div className="flex items-center gap-6 text-white/80">
-              <button className="hover:text-white" onClick={(e) => e.stopPropagation()}><Settings className="w-6 h-6" /></button>
+              {externalVideoUrl ? (
+                <div className="relative">
+                  <button 
+                    className="hover:text-white" 
+                    onClick={(e) => { e.stopPropagation(); setShowSettings(!showSettings); }}
+                  >
+                    <Settings className="w-6 h-6" />
+                  </button>
+                  {showSettings && (
+                    <div className="absolute top-full right-0 mt-2 bg-black/90 rounded-lg p-2 min-w-[120px]">
+                      <div className="text-xs text-gray-400 px-2 py-1">Quality</div>
+                      <button 
+                        className="w-full text-left px-2 py-1 hover:bg-white/10 rounded text-sm"
+                        onClick={(e) => { e.stopPropagation(); setShowSettings(false); }}
+                      >
+                        Auto
+                      </button>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <button className="hover:text-white" onClick={(e) => e.stopPropagation()}><Settings className="w-6 h-6" /></button>
+              )}
               <button className="hover:text-white" onClick={(e) => e.stopPropagation()}><Subtitles className="w-6 h-6" /></button>
             </div>
           </div>
@@ -242,24 +393,28 @@ export default function FullPlayer({ movie, onClose }: FullPlayerProps) {
           {/* Bottom Controls */}
           <div className="absolute bottom-0 left-0 w-full p-8 bg-gradient-to-t from-black/90 to-transparent" onClick={(e) => e.stopPropagation()}>
             {/* Progress Bar */}
-            <div 
-              className="group relative w-full h-1 bg-white/30 mb-8 cursor-pointer"
-              onClick={handleTimelineClick}
-            >
+            <div className="flex items-center gap-3 mb-4">
+              <span className="text-white text-sm font-medium min-w-[50px]">{formatTime(currentTime)}</span>
               <div 
-                className="absolute top-0 left-0 h-full bg-red-600" 
-                style={{ width: `${progressPercent}%` }}
-              />
-              <div 
-                className="absolute top-1/2 -translate-y-1/2 w-4 h-4 bg-red-600 rounded-full scale-0 group-hover:scale-100 transition-transform"
-                style={{ left: `${progressPercent}%` }}
-              />
-              <div 
-                className="absolute -top-8 -translate-x-1/2 text-xs text-white opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap"
-                style={{ left: `${progressPercent}%` }}
+                className="group relative flex-1 h-1 bg-white/30 cursor-pointer"
+                onClick={handleTimelineClick}
               >
-                {formatTime(currentTime)} / {formatTime(duration)}
+                <div 
+                  className="absolute top-0 left-0 h-full bg-red-600" 
+                  style={{ width: `${progressPercent}%` }}
+                />
+                <div 
+                  className="absolute top-1/2 -translate-y-1/2 w-4 h-4 bg-red-600 rounded-full scale-0 group-hover:scale-100 transition-transform"
+                  style={{ left: `${progressPercent}%` }}
+                />
+                <div 
+                  className="absolute -top-8 -translate-x-1/2 text-xs text-white opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap"
+                  style={{ left: `${progressPercent}%` }}
+                >
+                  {formatTime(currentTime)} / {formatTime(duration)}
+                </div>
               </div>
+              <span className="text-white text-sm font-medium min-w-[50px]">{formatTime(duration)}</span>
             </div>
 
             <div className="flex items-center justify-between">

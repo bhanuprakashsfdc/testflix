@@ -1,0 +1,10 @@
+{
+  "version": 1,
+  "skills": {
+    "skill-creator": {
+      "source": "starchild-ai-agent/official-skills",
+      "sourceType": "github",
+      "computedHash": "d1b46e534be9e4e1afee8387f7405f5f409b442f1f3877f404e1b674f356f2c2"
+    }
+  }
+}

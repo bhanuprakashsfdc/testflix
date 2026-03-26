@@ -3,6 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+import { useMemo } from 'react';
 import { X, Play, Plus, ThumbsUp, Volume2 } from 'lucide-react';
 import { Movie } from '../data/movies';
 import { motion, AnimatePresence } from 'motion/react';
@@ -19,7 +20,37 @@ export default function DetailModal({ movie, onClose, onPlay }: DetailModalProps
   const { movies } = useMovies();
   if (!movie) return null;
 
-  const relatedMovies = movies.filter(m => m.category === movie.category && m.id !== movie.id).slice(0, 6);
+  // Smart related movies - match by genres, category, or type
+  const relatedMovies = useMemo(() => {
+    const allMovies = movies.filter(m => m.id !== movie.id);
+    
+    // Score each movie based on similarity
+    const scored = allMovies.map(m => {
+      let score = 0;
+      
+      // Same category (highest weight)
+      if (m.category === movie.category) score += 3;
+      
+      // Same type
+      if (m.type === movie.type) score += 2;
+      
+      // Shared genres
+      const sharedGenres = m.genres.filter(g => movie.genres.includes(g));
+      score += sharedGenres.length;
+      
+      // Same year range (within 5 years)
+      const yearDiff = Math.abs(parseInt(m.year) - parseInt(movie.year));
+      if (yearDiff <= 5) score += 1;
+      
+      return { movie: m, score };
+    });
+    
+    // Sort by score and return top 6
+    return scored
+      .sort((a, b) => b.score - a.score)
+      .slice(0, 6)
+      .map(s => s.movie);
+  }, [movies, movie]);
 
   return (
     <AnimatePresence>

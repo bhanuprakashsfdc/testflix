@@ -25,7 +25,9 @@ export async function fetchMoviesFromSpreadsheet(): Promise<Movie[]> {
             thumbnail: row['Thumbnail'],
             bannerImage: row['Banner Image'],
             youtubeUrl: normalizeYoutubeUrl(row['YouTube URL']),
+            videoUrl: row['Video URL'] || '',
             category: row['Category'],
+            type: row['Type'] || 'Movie', // Default to 'Movie' if not specified
             year: row['Year'],
             rating: row['Rating'],
             duration: row['Duration'],

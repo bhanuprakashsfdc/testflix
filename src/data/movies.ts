@@ -10,7 +10,9 @@ export interface Movie {
   thumbnail: string;
   bannerImage: string;
   youtubeUrl: string;
+  videoUrl: string;
   category: string;
+  type: string; // 'Movie', 'Song', etc.
   year: string;
   rating: string;
   duration: string;
@@ -19,6 +21,7 @@ export interface Movie {
   genres: string[];
   cast: string[];
   language?: string;
+  director?: string;
 }
 
 export const MOVIES: Movie[] = [];

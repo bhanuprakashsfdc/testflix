@@ -9,6 +9,8 @@ import Footer from './components/Footer';
 import Home from './pages/Home';
 import MyList from './pages/MyList';
 import ProfileSelection from './pages/ProfileSelection';
+import Browse from './pages/Browse';
+import SearchResults from './pages/SearchResults';
 import { AnimatePresence, motion } from 'motion/react';
 import { MovieProvider } from './context/MovieContext';
 
@@ -63,9 +65,11 @@ function AppContent() {
               } 
             />
             {/* Fallback routes for other nav links */}
-            <Route path="/tv-shows" element={<Home />} />
-            <Route path="/movies" element={<Home />} />
-            <Route path="/new-popular" element={<Home />} />
+            <Route path="/tv-shows" element={<Browse type="tv-shows" title="TV Shows" />} />
+            <Route path="/movies" element={<Browse type="movies" title="Movies" />} />
+            <Route path="/new-popular" element={<Browse type="new-popular" title="New & Popular" />} />
+            <Route path="/songs" element={<Browse type="songs" title="Songs" />} />
+            <Route path="/search" element={<SearchResults />} />
           </Routes>
         </motion.div>
       </AnimatePresence>
@@ -89,7 +93,7 @@ function AppContent() {
           </button>
           <button className="flex flex-col items-center justify-center text-neutral-500">
             <span className="material-symbols-outlined">person</span>
-            <span className="text-[10px] font-medium">My Netflix</span>
+            <span className="text-[10px] font-medium">My List</span>
           </button>
         </nav>
       )}
