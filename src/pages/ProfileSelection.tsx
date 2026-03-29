@@ -1,10 +1,6 @@
-/**
- * @license
- * SPDX-License-Identifier: Apache-2.0
- */
-
 import { useNavigate } from 'react-router-dom';
 import { PlusCircle } from 'lucide-react';
+import { motion } from 'motion/react';
 
 export default function ProfileSelection() {
   const navigate = useNavigate();
@@ -20,55 +16,80 @@ export default function ProfileSelection() {
   };
 
   return (
-    <main className="min-h-screen flex flex-col items-center justify-center bg-background px-6">
-      <header className="fixed top-0 w-full z-50 h-20 flex items-center justify-center">
-        <div className="text-3xl font-black text-primary tracking-tighter uppercase font-headline">
+    <main className="min-h-screen flex flex-col items-center justify-center bg-background px-6 py-12">
+      <header className="fixed top-0 w-full z-50 h-16 md:h-20 flex items-center justify-center bg-gradient-to-b from-black/40 to-transparent">
+        <div className="text-2xl md:text-3xl font-black text-primary tracking-tighter uppercase font-headline">
           TESTFLIX
         </div>
       </header>
 
-      <div className="text-center mb-12">
-        <h1 className="font-headline font-bold text-4xl md:text-6xl text-on-surface tracking-tight mb-4">
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+        className="text-center mb-10 md:mb-14"
+      >
+        <h1 className="font-headline font-bold text-3xl md:text-5xl lg:text-6xl text-white tracking-tight">
           Who's watching?
         </h1>
-      </div>
+      </motion.div>
 
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-6 md:gap-12 max-w-5xl w-full">
-        {profiles.map((profile) => (
-          <button
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, delay: 0.15 }}
+        className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-8 max-w-4xl w-full"
+      >
+        {profiles.map((profile, index) => (
+          <motion.button
             key={profile.name}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4, delay: 0.1 + index * 0.08 }}
             onClick={handleProfileSelect}
-            className="group flex flex-col items-center space-y-4 transition-transform duration-250 ease-in-out hover:scale-105 outline-none"
+            className="group flex flex-col items-center space-y-3 outline-none focus-ring rounded-xl p-2"
+            aria-label={`Select profile: ${profile.name}`}
           >
-            <div className="relative aspect-square w-full max-w-[160px] overflow-hidden rounded-xl transition-all duration-200 shadow-xl group-hover:ring-4 group-hover:ring-on-surface">
+            <div className="relative aspect-square w-full max-w-[140px] md:max-w-[160px] overflow-hidden rounded-lg transition-all duration-200 group-hover:ring-2 group-hover:ring-white/70 group-focus-visible:ring-2 group-focus-visible:ring-ring">
               <img
-                src={profile.avatar || undefined}
-                alt={profile.name}
+                src={profile.avatar}
+                alt=""
                 className="w-full h-full object-cover"
                 referrerPolicy="no-referrer"
               />
             </div>
-            <span className="font-label text-lg md:text-xl text-on-surface-variant transition-colors duration-200 group-hover:text-on-surface">
+            <span className="text-sm md:text-lg text-neutral-400 group-hover:text-white transition-colors duration-200 font-medium">
               {profile.name}
             </span>
-          </button>
+          </motion.button>
         ))}
 
-        <button className="group flex flex-col items-center space-y-4 transition-transform duration-250 ease-in-out hover:scale-105 outline-none">
-          <div className="relative aspect-square w-full max-w-[160px] flex items-center justify-center bg-surface-container-high rounded-xl transition-all duration-200 hover:bg-surface-bright shadow-xl group-hover:bg-on-surface/10">
-            <PlusCircle className="w-16 h-16 text-on-surface-variant/40 group-hover:text-on-surface transition-colors" />
+        <motion.button
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4, delay: 0.35 }}
+          className="group flex flex-col items-center space-y-3 outline-none focus-ring rounded-xl p-2"
+          aria-label="Add new profile"
+        >
+          <div className="relative aspect-square w-full max-w-[140px] md:max-w-[160px] flex items-center justify-center bg-surface-container rounded-lg transition-all duration-200 group-hover:bg-surface-container-high group-hover:ring-2 group-hover:ring-white/70">
+            <PlusCircle className="w-14 h-14 text-neutral-600 group-hover:text-white transition-colors" />
           </div>
-          <span className="font-label text-lg md:text-xl text-on-surface-variant transition-colors group-hover:text-on-surface">
+          <span className="text-sm md:text-lg text-neutral-400 group-hover:text-white transition-colors duration-200 font-medium">
             Add Profile
           </span>
-        </button>
-      </div>
+        </motion.button>
+      </motion.div>
 
-      <div className="mt-20">
-        <button className="px-8 py-2 border-2 border-on-surface-variant/40 text-on-surface-variant/80 font-label tracking-[0.2em] uppercase text-sm hover:border-on-surface hover:text-on-surface transition-all duration-200 rounded-sm">
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.5, delay: 0.5 }}
+        className="mt-16 md:mt-20"
+      >
+        <button className="px-8 py-2.5 border border-neutral-600 text-neutral-400 tracking-[0.2em] uppercase text-xs md:text-sm hover:border-white hover:text-white transition-all duration-200 rounded focus-ring font-medium">
           Manage Profiles
         </button>
-      </div>
+      </motion.div>
     </main>
   );
 }
