@@ -1,38 +1,29 @@
-/**
- * @license
- * SPDX-License-Identifier: Apache-2.0
- */
-
-import { useState, useEffect, useRef, ChangeEvent } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { Search, Bell, Menu, X } from 'lucide-react';
+import { Search, Bell, Menu, X, ChevronDown, LogOut, Settings, User } from 'lucide-react';
 import { useMovies } from '../context/MovieContext';
 import { Movie } from '../data/movies';
+import { motion, AnimatePresence } from 'motion/react';
 
 export default function Navbar() {
   const [isScrolled, setIsScrolled] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [searchResults, setSearchResults] = useState<Movie[]>([]);
+  const [showProfileMenu, setShowProfileMenu] = useState(false);
+  const [showMobileMenu, setShowMobileMenu] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
   const { movies } = useMovies();
   const searchRef = useRef<HTMLDivElement>(null);
+  const profileRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    const handleScroll = () => {
-      if (window.scrollY > 0) {
-        setIsScrolled(true);
-      } else {
-        setIsScrolled(false);
-      }
-    };
-
-    window.addEventListener('scroll', handleScroll);
+    const handleScroll = () => setIsScrolled(window.scrollY > 0);
+    window.addEventListener('scroll', handleScroll, { passive: true });
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  // Filter movies based on search query (title, genres, or cast)
   useEffect(() => {
     if (searchQuery.trim().length > 0) {
       const query = searchQuery.toLowerCase();
@@ -50,15 +41,36 @@ export default function Navbar() {
     }
   }, [searchQuery, movies]);
 
-  // Close suggestions when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (searchRef.current && !searchRef.current.contains(event.target as Node)) {
         setShowSuggestions(false);
       }
+      if (profileRef.current && !profileRef.current.contains(event.target as Node)) {
+        setShowProfileMenu(false);
+      }
     };
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  // Close mobile menu on route change
+  useEffect(() => {
+    setShowMobileMenu(false);
+    setShowProfileMenu(false);
+  }, [location.pathname]);
+
+  // Close mobile menu on escape
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        setShowMobileMenu(false);
+        setShowProfileMenu(false);
+        setShowSuggestions(false);
+      }
+    };
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
   }, []);
 
   const navLinks = [
@@ -70,13 +82,10 @@ export default function Navbar() {
     { name: 'My List', path: '/my-list' },
   ];
 
-  const handleSearchChange = (e: ChangeEvent<HTMLInputElement>) => {
-    setSearchQuery(e.target.value);
-  };
-
   const handleSuggestionClick = (movie: Movie) => {
-    // Navigate to search results page with the query
     navigate(`/search?q=${encodeURIComponent(movie.title)}`);
+    setShowSuggestions(false);
+    setSearchQuery('');
   };
 
   const clearSearch = () => {
@@ -86,98 +95,273 @@ export default function Navbar() {
   };
 
   return (
-    <header 
-      className={`fixed top-0 w-full z-50 transition-colors duration-500 h-20 flex items-center px-6 md:px-12 ${
-        isScrolled ? 'bg-background/90 backdrop-blur-xl' : 'bg-transparent'
-      }`}
-    >
-      <div className="flex items-center gap-10 w-full justify-between">
-        <div className="flex items-center gap-10">
-          <Link to="/" className="text-3xl font-black text-primary tracking-tighter uppercase font-headline">
-            TESTFLIX
-          </Link>
-          <nav className="hidden md:flex items-center gap-6">
-            {navLinks.map((link) => (
-              <Link
-                key={link.name}
-                to={link.path}
-                className={`text-sm font-medium transition-colors duration-300 hover:text-neutral-300 ${
-                  location.pathname === link.path ? 'text-on-surface font-bold' : 'text-on-surface-variant'
-                }`}
-              >
-                {link.name}
-              </Link>
-            ))}
-          </nav>
-        </div>
+    <>
+      <header
+        className={`fixed top-0 w-full z-50 transition-all duration-500 h-16 md:h-20 flex items-center px-4 md:px-12 ${
+          isScrolled ? 'bg-background/95 backdrop-blur-xl shadow-lg shadow-black/20' : 'bg-gradient-to-b from-black/60 to-transparent'
+        }`}
+      >
+        <div className="flex items-center gap-8 w-full justify-between">
+          {/* Left: Logo + Nav */}
+          <div className="flex items-center gap-8">
+            <Link
+              to="/"
+              className="text-2xl md:text-3xl font-black text-primary tracking-tighter uppercase font-headline focus-ring rounded"
+              aria-label="TestFlix Home"
+            >
+              TESTFLIX
+            </Link>
 
-        <div className="flex items-center gap-6">
-          <div className="relative" ref={searchRef}>
-            <div className="hidden md:flex items-center bg-black/30 border border-white/10 px-3 py-1.5 rounded-lg">
-              <Search className="text-on-surface-variant w-5 h-5" />
-              <input
-                type="text"
-                placeholder="Titles, people, genres"
-                value={searchQuery}
-                onChange={handleSearchChange}
-                onFocus={() => searchQuery && setShowSuggestions(true)}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter' && searchQuery.trim()) {
-                    navigate(`/search?q=${encodeURIComponent(searchQuery)}`);
-                    setShowSuggestions(false);
-                  }
-                }}
-                className="bg-transparent border-none focus:ring-0 text-sm w-48 text-on-surface placeholder:text-on-surface-variant/50 ml-2"
-              />
-              {searchQuery && (
-                <button onClick={clearSearch} className="text-on-surface-variant hover:text-white">
-                  <X className="w-4 h-4" />
-                </button>
-              )}
-            </div>
-            {/* Autocomplete Suggestions Dropdown */}
-            {showSuggestions && searchResults.length > 0 && (
-              <div className="absolute top-full right-0 mt-2 w-80 bg-neutral-900 border border-white/10 rounded-lg shadow-xl overflow-hidden">
-                <div className="p-2">
-                  <p className="text-xs text-on-surface-variant px-2 py-1">Suggestions</p>
-                  {searchResults.map((movie) => (
-                    <button
-                      key={movie.id}
-                      onClick={() => handleSuggestionClick(movie)}
-                      className="w-full flex items-center gap-3 p-2 hover:bg-white/10 rounded-lg transition-colors text-left"
-                    >
-                      <img
-                        src={movie.thumbnail}
-                        alt={movie.title}
-                        className="w-12 h-8 object-cover rounded"
-                        referrerPolicy="no-referrer"
+            <nav className="hidden md:flex items-center gap-1" aria-label="Main navigation">
+              {navLinks.map((link) => {
+                const isActive = location.pathname === link.path;
+                return (
+                  <Link
+                    key={link.name}
+                    to={link.path}
+                    aria-current={isActive ? 'page' : undefined}
+                    className={`relative px-3 py-2 text-sm font-medium transition-colors duration-200 rounded-md focus-ring ${
+                      isActive
+                        ? 'text-white font-bold'
+                        : 'text-neutral-400 hover:text-neutral-200'
+                    }`}
+                  >
+                    {link.name}
+                    {isActive && (
+                      <motion.div
+                        layoutId="nav-indicator"
+                        className="absolute bottom-0 left-3 right-3 h-0.5 bg-primary rounded-full"
+                        transition={{ type: 'spring', stiffness: 380, damping: 30 }}
                       />
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm text-white truncate">{movie.title}</p>
-                        <p className="text-xs text-on-surface-variant">{movie.year} • {movie.genres[0]}</p>
-                      </div>
-                    </button>
-                  ))}
+                    )}
+                  </Link>
+                );
+              })}
+            </nav>
+          </div>
+
+          {/* Right: Search, Notifications, Profile */}
+          <div className="flex items-center gap-3 md:gap-4">
+            {/* Search */}
+            <div className="relative" ref={searchRef}>
+              <div className="flex items-center bg-black/40 border border-white/10 rounded-md overflow-hidden transition-all duration-300 focus-within:border-white/30 focus-within:bg-black/60">
+                <button
+                  className="p-2 text-neutral-400 hover:text-white transition-colors focus-ring"
+                  aria-label="Search"
+                  onClick={() => setShowSuggestions(!showSuggestions)}
+                >
+                  <Search className="w-5 h-5" />
+                </button>
+                <input
+                  type="text"
+                  placeholder="Titles, people, genres"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  onFocus={() => searchQuery && setShowSuggestions(true)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' && searchQuery.trim()) {
+                      navigate(`/search?q=${encodeURIComponent(searchQuery)}`);
+                      setShowSuggestions(false);
+                      clearSearch();
+                    }
+                    if (e.key === 'Escape') {
+                      setShowSuggestions(false);
+                    }
+                  }}
+                  className="bg-transparent border-none focus:ring-0 text-sm w-32 md:w-48 text-white placeholder:text-neutral-500 py-2 pr-2 outline-none"
+                  aria-label="Search for movies, TV shows, and more"
+                />
+                {searchQuery && (
+                  <button
+                    onClick={clearSearch}
+                    className="p-2 text-neutral-400 hover:text-white transition-colors focus-ring"
+                    aria-label="Clear search"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                )}
+              </div>
+
+              <AnimatePresence>
+                {showSuggestions && searchResults.length > 0 && (
+                  <motion.div
+                    initial={{ opacity: 0, y: -8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -8 }}
+                    transition={{ duration: 0.15 }}
+                    className="absolute top-full right-0 mt-2 w-80 bg-neutral-900/95 backdrop-blur-xl border border-white/10 rounded-lg shadow-2xl shadow-black/50 overflow-hidden"
+                    role="listbox"
+                    aria-label="Search suggestions"
+                  >
+                    <div className="p-2">
+                      <p className="text-xs text-neutral-500 px-3 py-2 font-medium uppercase tracking-wider">
+                        Suggestions
+                      </p>
+                      {searchResults.map((movie) => (
+                        <button
+                          key={movie.id}
+                          onClick={() => handleSuggestionClick(movie)}
+                          className="w-full flex items-center gap-3 p-2.5 hover:bg-white/10 rounded-lg transition-colors text-left focus-ring"
+                          role="option"
+                        >
+                          <img
+                            src={movie.thumbnail}
+                            alt=""
+                            className="w-14 h-9 object-cover rounded flex-shrink-0"
+                            referrerPolicy="no-referrer"
+                          />
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm text-white font-medium truncate">{movie.title}</p>
+                            <p className="text-xs text-neutral-500">{movie.year} · {movie.genres[0]}</p>
+                          </div>
+                        </button>
+                      ))}
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+
+            {/* Notifications */}
+            <button
+              className="relative p-2 text-neutral-400 hover:text-white transition-colors focus-ring rounded-md"
+              aria-label="Notifications"
+            >
+              <Bell className="w-5 h-5" />
+              <span className="absolute top-1 right-1 w-2 h-2 bg-primary rounded-full" aria-hidden="true" />
+            </button>
+
+            {/* Profile Dropdown */}
+            <div className="relative" ref={profileRef}>
+              <button
+                onClick={() => setShowProfileMenu(!showProfileMenu)}
+                className="flex items-center gap-1 focus-ring rounded-md p-1"
+                aria-expanded={showProfileMenu}
+                aria-haspopup="true"
+                aria-label="Profile menu"
+              >
+                <div className="h-8 w-8 rounded-md overflow-hidden border-2 border-transparent hover:border-white/30 transition-colors">
+                  <img
+                    src="https://picsum.photos/seed/profile/100/100"
+                    alt="User profile"
+                    className="w-full h-full object-cover"
+                    referrerPolicy="no-referrer"
+                  />
+                </div>
+                <ChevronDown className={`w-4 h-4 text-neutral-400 transition-transform duration-200 hidden md:block ${showProfileMenu ? 'rotate-180' : ''}`} />
+              </button>
+
+              <AnimatePresence>
+                {showProfileMenu && (
+                  <motion.div
+                    initial={{ opacity: 0, y: -8, scale: 0.95 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    exit={{ opacity: 0, y: -8, scale: 0.95 }}
+                    transition={{ duration: 0.15 }}
+                    className="absolute top-full right-0 mt-2 w-56 bg-black/95 backdrop-blur-xl border border-white/10 rounded-lg shadow-2xl shadow-black/50 overflow-hidden"
+                    role="menu"
+                    aria-label="Profile options"
+                  >
+                    <div className="p-1">
+                      <Link
+                        to="/profile"
+                        className="flex items-center gap-3 px-4 py-3 text-sm text-neutral-300 hover:text-white hover:bg-white/10 transition-colors rounded-md focus-ring"
+                        role="menuitem"
+                      >
+                        <User className="w-4 h-4" />
+                        Manage Profiles
+                      </Link>
+                      <Link
+                        to="/my-list"
+                        className="flex items-center gap-3 px-4 py-3 text-sm text-neutral-300 hover:text-white hover:bg-white/10 transition-colors rounded-md focus-ring"
+                        role="menuitem"
+                      >
+                        <Settings className="w-4 h-4" />
+                        Account Settings
+                      </Link>
+                      <div className="border-t border-white/10 my-1" />
+                      <button
+                        className="flex items-center gap-3 px-4 py-3 text-sm text-neutral-300 hover:text-white hover:bg-white/10 transition-colors rounded-md w-full text-left focus-ring"
+                        role="menuitem"
+                      >
+                        <LogOut className="w-4 h-4" />
+                        Sign Out
+                      </button>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+
+            {/* Mobile Menu Toggle */}
+            <button
+              onClick={() => setShowMobileMenu(!showMobileMenu)}
+              className="md:hidden p-2 text-neutral-400 hover:text-white transition-colors focus-ring rounded-md"
+              aria-label={showMobileMenu ? 'Close menu' : 'Open menu'}
+              aria-expanded={showMobileMenu}
+            >
+              {showMobileMenu ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+            </button>
+          </div>
+        </div>
+      </header>
+
+      {/* Mobile Navigation Drawer */}
+      <AnimatePresence>
+        {showMobileMenu && (
+          <>
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 z-40 bg-black/70 backdrop-blur-sm md:hidden"
+              onClick={() => setShowMobileMenu(false)}
+              aria-hidden="true"
+            />
+            <motion.nav
+              initial={{ x: '100%' }}
+              animate={{ x: 0 }}
+              exit={{ x: '100%' }}
+              transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+              className="fixed top-0 right-0 bottom-0 w-72 z-50 bg-background/98 backdrop-blur-xl md:hidden"
+              aria-label="Mobile navigation"
+            >
+              <div className="flex flex-col h-full">
+                <div className="flex items-center justify-between p-6 border-b border-white/10">
+                  <span className="text-xl font-black text-primary uppercase">Menu</span>
+                  <button
+                    onClick={() => setShowMobileMenu(false)}
+                    className="p-2 text-neutral-400 hover:text-white focus-ring rounded-md"
+                    aria-label="Close menu"
+                  >
+                    <X className="w-6 h-6" />
+                  </button>
+                </div>
+                <div className="flex-1 py-4">
+                  {navLinks.map((link) => {
+                    const isActive = location.pathname === link.path;
+                    return (
+                      <Link
+                        key={link.name}
+                        to={link.path}
+                        onClick={() => setShowMobileMenu(false)}
+                        aria-current={isActive ? 'page' : undefined}
+                        className={`block px-6 py-3.5 text-base font-medium transition-colors ${
+                          isActive
+                            ? 'text-white bg-white/10 border-l-4 border-primary'
+                            : 'text-neutral-400 hover:text-white hover:bg-white/5'
+                        }`}
+                      >
+                        {link.name}
+                      </Link>
+                    );
+                  })}
                 </div>
               </div>
-            )}
-          </div>
-          <button className="text-on-surface hover:text-neutral-300 transition-colors">
-            <Bell className="w-6 h-6" />
-          </button>
-          <Link to="/profile" className="h-8 w-8 rounded-lg overflow-hidden border-2 border-primary-container cursor-pointer">
-            <img
-              src="https://picsum.photos/seed/profile/100/100"
-              alt="User Profile"
-              className="w-full h-full object-cover"
-              referrerPolicy="no-referrer"
-            />
-          </Link>
-          <button className="md:hidden text-on-surface">
-            <Menu className="w-6 h-6" />
-          </button>
-        </div>
-      </div>
-    </header>
+            </motion.nav>
+          </>
+        )}
+      </AnimatePresence>
+    </>
   );
 }
