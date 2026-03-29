@@ -1,9 +1,4 @@
-/**
- * @license
- * SPDX-License-Identifier: Apache-2.0
- */
-
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useMemo } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import MovieRow from '../components/MovieRow';
 import FullPlayer from '../components/FullPlayer';
@@ -11,6 +6,7 @@ import DetailModal from '../components/DetailModal';
 import LoadingSpinner from '../components/LoadingSpinner';
 import { Movie } from '../data/movies';
 import { useMovies } from '../context/MovieContext';
+import { Search, X } from 'lucide-react';
 
 export default function SearchResults() {
   const [searchParams] = useSearchParams();
@@ -20,12 +16,10 @@ export default function SearchResults() {
   const [selectedMovie, setSelectedMovie] = useState<Movie | null>(null);
   const [selectedMovieForDetail, setSelectedMovieForDetail] = useState<Movie | null>(null);
 
-  // Filter movies based on search query (title, genres, cast, director, category, year)
   const searchResults = useMemo(() => {
     if (!query.trim()) return [];
-    
     const q = query.toLowerCase();
-    return movies.filter(movie => 
+    return movies.filter(movie =>
       movie.title.toLowerCase().includes(q) ||
       movie.genres.some(g => g.toLowerCase().includes(q)) ||
       movie.cast.some(c => c.toLowerCase().includes(q)) ||
@@ -35,46 +29,32 @@ export default function SearchResults() {
     );
   }, [movies, query]);
 
-  // Group by category for OTT-style display
   const categorizedResults = useMemo(() => {
     const categories: Record<string, Movie[]> = {
       'Matching Titles': [],
-      'Genres': [],
-      'Cast & Crew': [],
-      'Directors': [],
-      'Categories': []
+      'By Genre': [],
+      'By Cast & Crew': [],
     };
-    
+
     searchResults.forEach(movie => {
-      // Check if title matches
       if (movie.title.toLowerCase().includes(query.toLowerCase())) {
         categories['Matching Titles'].push(movie);
       }
-      // Check genres
       const matchingGenres = movie.genres.filter(g => g.toLowerCase().includes(query.toLowerCase()));
       if (matchingGenres.length > 0) {
-        categories['Genres'].push(movie);
+        categories['By Genre'].push(movie);
       }
-      // Check cast
       const matchingCast = movie.cast.filter(c => c.toLowerCase().includes(query.toLowerCase()));
-      if (matchingCast.length > 0) {
-        categories['Cast & Crew'].push(movie);
+      if (matchingCast.length > 0 || (movie.director && movie.director.toLowerCase().includes(query.toLowerCase()))) {
+        categories['By Cast & Crew'].push(movie);
       }
-      // Check director
-      if (movie.director && movie.director.toLowerCase().includes(query.toLowerCase())) {
-        categories['Directors'].push(movie);
-      }
-      // Add to categories section
-      categories['Categories'].push(movie);
     });
-    
-    // Remove duplicates from categories
+
+    // Deduplicate
     Object.keys(categories).forEach(key => {
-      if (key !== 'Matching Titles') {
-        categories[key] = [...new Map(categories[key].map(m => [m.id, m])).values()];
-      }
+      categories[key] = [...new Map(categories[key].map(m => [m.id, m])).values()];
     });
-    
+
     return categories;
   }, [searchResults, query]);
 
@@ -94,92 +74,107 @@ export default function SearchResults() {
   if (loading) return <LoadingSpinner />;
 
   return (
-    <main className="pt-32 pb-24 min-h-screen">
+    <main id="main-content" className="pt-20 md:pt-28 pb-20 md:pb-24 min-h-screen">
       {/* Search Header */}
-      <div className="px-6 md:px-12 mb-8">
+      <div className="px-4 md:px-12 mb-6 md:mb-8">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-black font-headline tracking-tight text-on-surface">
+            <h1 className="text-2xl md:text-3xl font-black font-headline tracking-tight text-white">
               Search Results
             </h1>
-            <p className="text-on-surface-variant mt-2">
-              {searchResults.length} results for "{query}"
+            <p className="text-neutral-500 mt-1 text-sm">
+              {searchResults.length} {searchResults.length === 1 ? 'result' : 'results'} for &ldquo;{query}&rdquo;
             </p>
           </div>
-          <button 
+          <button
             onClick={handleClearSearch}
-            className="text-on-surface-variant hover:text-white transition-colors text-sm"
+            className="flex items-center gap-2 text-neutral-400 hover:text-white transition-colors text-sm focus-ring rounded-md px-3 py-1.5"
           >
-            Clear Search
+            <X className="w-4 h-4" />
+            Clear
           </button>
         </div>
       </div>
 
-      {/* OTT-style Search Results */}
       {searchResults.length > 0 ? (
         <div className="space-y-8">
-          {/* Top Results - Large Grid */}
+          {/* Matching Titles Grid */}
           {categorizedResults['Matching Titles'].length > 0 && (
-            <section className="px-6 md:px-12">
-              <h2 className="font-headline text-xl font-bold mb-4 tracking-tight text-on-surface">
+            <section className="px-4 md:px-12">
+              <h2 className="font-headline text-lg md:text-xl font-bold mb-4 text-white">
                 Matching Titles
               </h2>
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 md:gap-4">
                 {categorizedResults['Matching Titles'].map(movie => (
-                  <div 
+                  <button
                     key={movie.id}
-                    className="cursor-pointer group"
+                    className="group text-left focus-ring rounded-lg"
                     onClick={() => handlePlay(movie)}
+                    aria-label={`Play ${movie.title}`}
                   >
-                    <div className="relative aspect-video rounded-lg overflow-hidden mb-2">
+                    <div className="relative aspect-video rounded-lg overflow-hidden mb-2 bg-surface-container">
                       <img
                         src={movie.thumbnail}
-                        alt={movie.title}
+                        alt=""
                         loading="lazy"
                         className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                         referrerPolicy="no-referrer"
                       />
                       <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                        <div className="w-12 h-12 rounded-full bg-white flex items-center justify-center">
-                          <div className="w-0 h-0 border-l-[12px] border-l-black border-t-[8px] border-t-transparent border-b-[8px] border-b-transparent ml-1" />
+                        <div className="w-12 h-12 rounded-full bg-white/90 flex items-center justify-center">
+                          <svg className="w-5 h-5 text-black ml-0.5" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M8 5v14l11-7z" />
+                          </svg>
                         </div>
                       </div>
                     </div>
-                    <h3 className="font-headline font-bold text-sm text-on-surface truncate">
+                    <h3 className="font-headline font-bold text-xs md:text-sm text-white truncate">
                       {movie.title}
                     </h3>
-                    <p className="font-body text-xs text-on-surface-variant">
-                      {movie.year} • {movie.duration}
+                    <p className="font-body text-[10px] md:text-xs text-neutral-500">
+                      {movie.year} · {movie.duration}
                     </p>
-                  </div>
+                  </button>
                 ))}
               </div>
             </section>
           )}
 
-          {/* By Category - Movie Rows */}
-          {categorizedResults['Categories'].length > 0 && (
-            <MovieRow 
-              title="Browse by Category"
-              movies={categorizedResults['Categories']}
+          {/* Genre Results */}
+          {categorizedResults['By Genre'].length > 0 && (
+            <MovieRow
+              title="By Genre"
+              movies={categorizedResults['By Genre']}
+              onPlay={handlePlay}
+              onInfo={handleInfo}
+            />
+          )}
+
+          {/* Cast & Crew Results */}
+          {categorizedResults['By Cast & Crew'].length > 0 && (
+            <MovieRow
+              title="By Cast & Crew"
+              movies={categorizedResults['By Cast & Crew']}
               onPlay={handlePlay}
               onInfo={handleInfo}
             />
           )}
         </div>
       ) : (
-        /* No Results */
-        <div className="px-6 md:px-12 py-20 text-center">
+        <div className="px-4 md:px-12 py-20 text-center">
           <div className="max-w-md mx-auto">
-            <h2 className="text-2xl font-bold text-on-surface mb-4">
+            <div className="w-20 h-20 rounded-full bg-surface-container mx-auto mb-6 flex items-center justify-center">
+              <Search className="w-10 h-10 text-neutral-600" />
+            </div>
+            <h2 className="text-xl font-bold text-white mb-3">
               No results found
             </h2>
-            <p className="text-on-surface-variant mb-6">
+            <p className="text-neutral-500 text-sm mb-6">
               Try searching with different keywords or browse our categories
             </p>
-            <button 
+            <button
               onClick={handleClearSearch}
-              className="px-6 py-2 bg-primary-container text-white rounded-lg hover:bg-primary-container/80 transition-colors"
+              className="px-6 py-2.5 bg-primary text-white rounded-md hover:bg-primary/90 transition-colors focus-ring font-medium text-sm"
             >
               Go to Home
             </button>
@@ -187,9 +182,9 @@ export default function SearchResults() {
         </div>
       )}
 
-      <FullPlayer 
-        movie={selectedMovie} 
-        onClose={() => setSelectedMovie(null)} 
+      <FullPlayer
+        movie={selectedMovie}
+        onClose={() => setSelectedMovie(null)}
       />
 
       <DetailModal

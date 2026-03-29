@@ -1,8 +1,3 @@
-/**
- * @license
- * SPDX-License-Identifier: Apache-2.0
- */
-
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { Movie } from '../data/movies';
 import MovieCard from '../components/MovieCard';
@@ -10,6 +5,8 @@ import FullPlayer from '../components/FullPlayer';
 import DetailModal from '../components/DetailModal';
 import LoadingSpinner from '../components/LoadingSpinner';
 import { useMovies } from '../context/MovieContext';
+import { getMyListMovies } from '../utils/watchHistory';
+import { ListVideo } from 'lucide-react';
 
 const ITEMS_PER_PAGE = 12;
 
@@ -21,45 +18,33 @@ export default function MyList() {
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   const loaderRef = useRef<HTMLDivElement>(null);
 
-  // For demo purposes, we'll just show all movies as "My List"
-  const myListMovies = movies;
+  const myListMovies = getMyListMovies(movies);
   const hasMore = displayedCount < myListMovies.length;
 
-  // Reset displayed count when movies change
   useEffect(() => {
     setDisplayedCount(ITEMS_PER_PAGE);
   }, [movies.length]);
 
-  // Infinite scroll using Intersection Observer
+  // Infinite scroll
   const handleObserver = useCallback((entries: IntersectionObserverEntry[]) => {
     const target = entries[0];
     if (target.isIntersecting && hasMore && !isLoadingMore) {
       setIsLoadingMore(true);
-      // Simulate loading delay
       setTimeout(() => {
         setDisplayedCount(prev => Math.min(prev + ITEMS_PER_PAGE, myListMovies.length));
         setIsLoadingMore(false);
-      }, 500);
+      }, 400);
     }
   }, [hasMore, isLoadingMore, myListMovies.length]);
 
   useEffect(() => {
-    const option = {
+    const observer = new IntersectionObserver(handleObserver, {
       root: null,
-      rootMargin: '20px',
+      rootMargin: '100px',
       threshold: 0,
-    };
-    const observer = new IntersectionObserver(handleObserver, option);
-    
-    if (loaderRef.current) {
-      observer.observe(loaderRef.current);
-    }
-    
-    return () => {
-      if (loaderRef.current) {
-        observer.unobserve(loaderRef.current);
-      }
-    };
+    });
+    if (loaderRef.current) observer.observe(loaderRef.current);
+    return () => observer.disconnect();
   }, [handleObserver]);
 
   const handlePlay = (movie: Movie) => {
@@ -74,63 +59,70 @@ export default function MyList() {
   if (loading) return <LoadingSpinner />;
 
   return (
-    <main className="pt-32 pb-24 px-6 md:px-12 min-h-screen">
-      <header className="mb-10">
-        <h1 className="text-4xl font-black font-headline tracking-tight text-on-surface">
+    <main id="main-content" className="pt-20 md:pt-28 pb-20 md:pb-24 px-4 md:px-12 min-h-screen">
+      <header className="mb-8 md:mb-10">
+        <h1 className="text-3xl md:text-4xl font-black font-headline tracking-tight text-white">
           My List
         </h1>
-        <p className="text-on-surface-variant mt-2">
-          {myListMovies.length} items saved
+        <p className="text-neutral-500 mt-1.5 text-sm md:text-base">
+          {myListMovies.length} {myListMovies.length === 1 ? 'item' : 'items'} saved
         </p>
       </header>
 
-      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-x-4 gap-y-12">
-        {myListMovies.slice(0, displayedCount).map((movie) => (
-          <div key={movie.id} className="flex flex-col gap-3">
-            <MovieCard 
-              movie={movie} 
-              onPlay={handlePlay} 
-              onInfo={handleInfo}
-            />
-            <div>
-              <h3 className="font-headline font-bold text-sm text-on-surface truncate">
-                {movie.title}
-              </h3>
-              <p className="font-body text-xs text-on-surface-variant mt-1">
-                {movie.year} • {movie.rating} • {movie.duration}
-              </p>
-            </div>
+      {myListMovies.length > 0 ? (
+        <>
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-x-3 md:gap-x-4 gap-y-6 md:gap-y-10">
+            {myListMovies.slice(0, displayedCount).map((movie) => (
+              <div key={movie.id} className="flex flex-col gap-2">
+                <MovieCard
+                  movie={movie}
+                  onPlay={handlePlay}
+                  onInfo={handleInfo}
+                />
+                <div className="px-0.5">
+                  <h3 className="font-headline font-bold text-xs md:text-sm text-white truncate">
+                    {movie.title}
+                  </h3>
+                  <p className="font-body text-[10px] md:text-xs text-neutral-500 mt-0.5">
+                    {movie.year} · {movie.rating} · {movie.duration}
+                  </p>
+                </div>
+              </div>
+            ))}
           </div>
-        ))}
-      </div>
 
-      {/* Loading indicator / infinite scroll trigger */}
-      {hasMore && (
-        <div ref={loaderRef} className="py-8 flex justify-center">
-          {isLoadingMore ? (
-            <LoadingSpinner />
-          ) : (
-            <div className="h-10" /> // Invisible trigger area
+          {/* Infinite scroll trigger */}
+          {hasMore && (
+            <div ref={loaderRef} className="py-8 flex justify-center">
+              {isLoadingMore ? (
+                <div className="w-8 h-8 border-2 border-neutral-700 border-t-primary rounded-full animate-spin" />
+              ) : (
+                <div className="h-10" />
+              )}
+            </div>
           )}
-        </div>
-      )}
 
-      {!hasMore && myListMovies.length > 0 && (
-        <div className="py-8 text-center text-on-surface-variant">
-          You've reached the end of your list
-        </div>
-      )}
-
-      {myListMovies.length === 0 && (
+          {!hasMore && myListMovies.length > ITEMS_PER_PAGE && (
+            <div className="py-8 text-center text-neutral-600 text-sm">
+              You've reached the end of your list
+            </div>
+          )}
+        </>
+      ) : (
         <div className="py-20 text-center">
-          <p className="text-on-surface-variant text-xl">Your list is empty</p>
-          <p className="text-on-surface-variant/60 mt-2">Add movies to see them here</p>
+          <div className="w-20 h-20 rounded-full bg-surface-container mx-auto mb-6 flex items-center justify-center">
+            <ListVideo className="w-10 h-10 text-neutral-600" />
+          </div>
+          <h2 className="text-xl font-bold text-white mb-2">Your list is empty</h2>
+          <p className="text-neutral-500 text-sm max-w-sm mx-auto">
+            Browse our catalog and add movies and TV shows to your list by clicking the + button.
+          </p>
         </div>
       )}
 
-      <FullPlayer 
-        movie={selectedMovie} 
-        onClose={() => setSelectedMovie(null)} 
+      <FullPlayer
+        movie={selectedMovie}
+        onClose={() => setSelectedMovie(null)}
       />
 
       <DetailModal
