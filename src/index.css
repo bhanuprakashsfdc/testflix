@@ -129,6 +129,27 @@
     @apply disabled:pointer-events-none disabled:opacity-50;
   }
 
+  /* Prefers Reduced Motion (AC-08) */
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+
+  /* Mobile Tap Targets — minimum 48px (MB-02) */
+  @media (max-width: 768px) {
+    button, a, [role="button"], input, select, textarea {
+      min-height: 48px;
+      min-width: 48px;
+    }
+    button svg, a svg {
+      pointer-events: none;
+    }
+  }
+
   /* Custom Scrollbar */
   ::-webkit-scrollbar {
     width: 6px;

@@ -3,11 +3,70 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="description" content="TestFlix - Stream Movies, TV Shows, and Music" />
+
+    <!-- SEO Meta Tags (CS-01, CS-06) -->
+    <title>TestFlix - Stream Movies, TV Shows & Music Online</title>
+    <meta name="description" content="TestFlix is a free streaming platform for movies, TV shows, songs, and music. Discover trending content, create playlists, and enjoy ad-free streaming." />
+    <meta name="keywords" content="streaming, movies, TV shows, music, songs, free streaming, online movies, watch movies" />
+    <meta name="author" content="TestFlix" />
+    <meta name="robots" content="index, follow" />
+    <link rel="canonical" href="https://testflix.app/" />
+
+    <!-- Open Graph / Social Sharing (ER-07) -->
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://testflix.app/" />
+    <meta property="og:title" content="TestFlix - Stream Movies, TV Shows & Music" />
+    <meta property="og:description" content="Free streaming platform for movies, TV shows, and music. Discover trending content and enjoy unlimited entertainment." />
+    <meta property="og:image" content="https://testflix.app/og-image.png" />
+    <meta property="og:site_name" content="TestFlix" />
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:url" content="https://testflix.app/" />
+    <meta name="twitter:title" content="TestFlix - Stream Movies, TV Shows & Music" />
+    <meta name="twitter:description" content="Free streaming platform for movies, TV shows, and music." />
+    <meta name="twitter:image" content="https://testflix.app/og-image.png" />
+
+    <!-- Theme & Appearance -->
     <meta name="theme-color" content="#141414" />
     <meta name="color-scheme" content="dark" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+
+    <!-- Favicon -->
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎬</text></svg>" />
-    <title>TestFlix - Stream Movies & Music</title>
+
+    <!-- Preconnect for performance (PF-08) -->
+    <link rel="preconnect" href="https://www.youtube.com" />
+    <link rel="preconnect" href="https://i.ytimg.com" />
+    <link rel="preconnect" href="https://script.google.com" />
+    <link rel="dns-prefetch" href="https://www.youtube.com" />
+
+    <!-- Structured Data / Schema.org (CS-04) -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebSite",
+      "name": "TestFlix",
+      "url": "https://testflix.app/",
+      "description": "Free streaming platform for movies, TV shows, and music",
+      "potentialAction": {
+        "@type": "SearchAction",
+        "target": "https://testflix.app/search?q={search_term_string}",
+        "query-input": "required name=search_term_string"
+      }
+    }
+    </script>
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "Organization",
+      "name": "TestFlix",
+      "url": "https://testflix.app/",
+      "logo": "https://testflix.app/logo.png",
+      "sameAs": []
+    }
+    </script>
   </head>
   <body>
     <div id="root"></div>

@@ -7,9 +7,12 @@ import ProfileSelection from './pages/ProfileSelection';
 import Browse from './pages/Browse';
 import SearchResults from './pages/SearchResults';
 import MusicLibrary from './pages/MusicLibrary';
+import NotFound from './pages/NotFound';
 import MusicToggle from './components/MusicToggle';
 import MusicPlayer from './components/MusicPlayer';
 import MusicQueue from './components/MusicQueue';
+import ErrorBoundary from './components/ErrorBoundary';
+import CookieConsent from './components/CookieConsent';
 import { AnimatePresence, motion } from 'motion/react';
 import { MovieProvider } from './context/MovieContext';
 import { MusicProvider, useMusic } from './context/MusicContext';
@@ -49,6 +52,7 @@ function AppContent() {
             <Route path="/songs" element={<Browse type="songs" title="Songs" />} />
             <Route path="/music" element={<MusicLibrary />} />
             <Route path="/search" element={<SearchResults />} />
+            <Route path="*" element={<NotFound />} />
           </Routes>
         </motion.div>
       </AnimatePresence>
@@ -78,18 +82,23 @@ function AppContent() {
       {/* Music Player & Queue — always mounted, visibility handled internally */}
       <MusicPlayer />
       <MusicQueue />
+
+      {/* Cookie Consent (SE-03) */}
+     {/* <CookieConsent /> */}
     </div>
   );
 }
 
 export default function App() {
   return (
-    <MovieProvider>
-      <MusicProvider>
-        <Router>
-          <AppContent />
-        </Router>
-      </MusicProvider>
-    </MovieProvider>
+    <ErrorBoundary>
+      <MovieProvider>
+        <MusicProvider>
+          <Router>
+            <AppContent />
+          </Router>
+        </MusicProvider>
+      </MovieProvider>
+    </ErrorBoundary>
   );
 }
