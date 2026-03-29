@@ -90,15 +90,26 @@ export default function Home() {
   };
 
   const handleVideoEnd = (currentMovie: Movie) => {
-    const isMovie = (currentMovie.type || '').toLowerCase().includes('movie') ||
-                    (currentMovie.type || '').toLowerCase().includes('film');
-    if (!isMovie) return;
+    saveWatchProgress(currentMovie.id, 100);
 
+    // Pick a random song to play next
+    const songs = movies.filter(m => {
+      const t = (m.type || '').toLowerCase();
+      return t.includes('song') || t.includes('music');
+    });
+
+    if (songs.length > 0) {
+      const randomSong = songs[Math.floor(Math.random() * songs.length)];
+      setSelectedMovie(randomSong);
+      saveWatchProgress(randomSong.id, 0);
+      return;
+    }
+
+    // Fallback: pick next movie if no songs available
     const allMovies: Movie[] = [];
     shuffledRows.forEach(row => {
       row.movies.forEach(m => {
-        const mType = (m.type || '').toLowerCase();
-        if ((mType.includes('movie') || mType.includes('film')) && !allMovies.find(x => x.id === m.id)) {
+        if (!allMovies.find(x => x.id === m.id)) {
           allMovies.push(m);
         }
       });
@@ -107,7 +118,6 @@ export default function Home() {
     const currentIndex = allMovies.findIndex(m => m.id === currentMovie.id);
     if (currentIndex >= 0 && currentIndex < allMovies.length - 1) {
       setSelectedMovie(allMovies[currentIndex + 1]);
-      saveWatchProgress(currentMovie.id, 100);
       saveWatchProgress(allMovies[currentIndex + 1].id, 0);
     }
   };

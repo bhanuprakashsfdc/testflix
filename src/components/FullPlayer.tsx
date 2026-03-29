@@ -26,44 +26,19 @@ export default function FullPlayer({ movie, onClose, onVideoEnd }: FullPlayerPro
   const [isMuted, setIsMuted] = useState(false);
   const [externalVideoUrl, setExternalVideoUrl] = useState('');
   const [showSettings, setShowSettings] = useState(false);
-  const [showNextVideoPrompt, setShowNextVideoPrompt] = useState(false);
   const controlsTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
   const playerRef = useRef<any>(null);
   const progressInterval = useRef<ReturnType<typeof setInterval> | null>(null);
-  const autoPlayTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const currentMovieRef = useRef<Movie | null>(null);
+  const hasTriggeredNearEnd = useRef(false);
 
   // Store current movie for auto-play
   useEffect(() => {
     if (movie) {
       currentMovieRef.current = movie;
+      hasTriggeredNearEnd.current = false;
     }
   }, [movie]);
-
-  // Auto-play next logic
-  useEffect(() => {
-    if (movie && onVideoEnd) {
-      if (autoPlayTimeoutRef.current) clearTimeout(autoPlayTimeoutRef.current);
-
-      const isMovie = (movie.type || '').toLowerCase().includes('movie') ||
-                      (movie.type || '').toLowerCase().includes('film');
-      const autoPlayDelay = isMovie ? 60000 : 30000;
-
-      autoPlayTimeoutRef.current = setTimeout(() => {
-        if (currentMovieRef.current && onVideoEnd) {
-          setShowNextVideoPrompt(true);
-          setTimeout(() => {
-            onVideoEnd(currentMovieRef.current!);
-            setShowNextVideoPrompt(false);
-          }, 5000);
-        }
-      }, autoPlayDelay);
-
-      return () => {
-        if (autoPlayTimeoutRef.current) clearTimeout(autoPlayTimeoutRef.current);
-      };
-    }
-  }, [movie, onVideoEnd]);
 
   // Keyboard controls
   useEffect(() => {
@@ -188,16 +163,27 @@ export default function FullPlayer({ movie, onClose, onVideoEnd }: FullPlayerPro
             setIsPlaying(true);
             progressInterval.current = setInterval(() => {
               if (playerRef.current?.getCurrentTime) {
-                setCurrentTime(playerRef.current.getCurrentTime());
+                const time = playerRef.current.getCurrentTime();
+                const dur = playerRef.current.getDuration();
+                setCurrentTime(time);
+
+                // Play random song 2 seconds before video ends
+                if (dur > 0 && (dur - time) <= 2 && !hasTriggeredNearEnd.current) {
+                  hasTriggeredNearEnd.current = true;
+                  if (currentMovieRef.current && onVideoEnd) {
+                    onVideoEnd(currentMovieRef.current);
+                  }
+                }
               }
-            }, 500);
+            }, 250);
           },
           onStateChange: (event: any) => {
             if (event.data === window.YT.PlayerState.PLAYING) setIsPlaying(true);
             if (event.data === window.YT.PlayerState.PAUSED) setIsPlaying(false);
             if (event.data === window.YT.PlayerState.ENDED) {
               setIsPlaying(false);
-              if (currentMovieRef.current && onVideoEnd) {
+              if (!hasTriggeredNearEnd.current && currentMovieRef.current && onVideoEnd) {
+                hasTriggeredNearEnd.current = true;
                 onVideoEnd(currentMovieRef.current);
               }
             }
@@ -366,29 +352,11 @@ export default function FullPlayer({ movie, onClose, onVideoEnd }: FullPlayerPro
           </div>
 
           {/* Center Play/Pause Indicator */}
-          {!isPlaying && !showNextVideoPrompt && (
+          {!isPlaying && (
             <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
               <div className="w-16 h-16 md:w-20 md:h-20 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center">
                 <Play className="w-8 h-8 md:w-10 md:h-10 text-white fill-current ml-1" />
               </div>
-            </div>
-          )}
-
-          {/* Next Video Prompt */}
-          {showNextVideoPrompt && (
-            <div className="absolute bottom-28 right-8 bg-black/90 backdrop-blur rounded-lg p-4 border border-white/10 shadow-xl">
-              <p className="text-white text-sm font-medium mb-1">Playing next in a moment...</p>
-              <p className="text-neutral-400 text-xs">Up next from the collection</p>
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setShowNextVideoPrompt(false);
-                  if (currentMovieRef.current && onVideoEnd) onVideoEnd(currentMovieRef.current);
-                }}
-                className="mt-3 px-4 py-1.5 bg-white text-black text-xs font-bold rounded hover:bg-neutral-200 transition-colors focus-ring"
-              >
-                Play Now
-              </button>
             </div>
           )}
 
