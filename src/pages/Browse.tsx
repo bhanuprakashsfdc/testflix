@@ -1,15 +1,11 @@
-/**
- * @license
- * SPDX-License-Identifier: Apache-2.0
- */
-
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useMemo } from 'react';
 import MovieRow from '../components/MovieRow';
 import FullPlayer from '../components/FullPlayer';
 import DetailModal from '../components/DetailModal';
 import LoadingSpinner from '../components/LoadingSpinner';
 import { Movie } from '../data/movies';
 import { useMovies } from '../context/MovieContext';
+import { Play } from 'lucide-react';
 
 interface BrowsePageProps {
   type: 'songs' | 'movies' | 'tv-shows' | 'new-popular' | 'all';
@@ -21,10 +17,8 @@ export default function BrowsePage({ type, title }: BrowsePageProps) {
   const [selectedMovie, setSelectedMovie] = useState<Movie | null>(null);
   const [selectedMovieForDetail, setSelectedMovieForDetail] = useState<Movie | null>(null);
 
-  // Filter movies based on type
   const filteredMovies = useMemo(() => {
     if (type === 'all') return movies;
-    
     switch (type) {
       case 'songs':
         return movies.filter(m => {
@@ -42,14 +36,12 @@ export default function BrowsePage({ type, title }: BrowsePageProps) {
           return t.includes('tv') || t.includes('show') || t.includes('series');
         });
       case 'new-popular':
-        // Show all content sorted by year (newest first)
         return [...movies].sort((a, b) => parseInt(b.year) - parseInt(a.year));
       default:
         return movies;
     }
   }, [movies, type]);
 
-  // Group by category for display
   const categorizedMovies = useMemo(() => {
     const categories: Record<string, Movie[]> = {};
     filteredMovies.forEach(movie => {
@@ -57,7 +49,7 @@ export default function BrowsePage({ type, title }: BrowsePageProps) {
       if (!categories[cat]) categories[cat] = [];
       categories[cat].push(movie);
     });
-    return categories as Record<string, Movie[]>;
+    return categories;
   }, [filteredMovies]);
 
   const handlePlay = (movie: Movie) => {
@@ -72,69 +64,68 @@ export default function BrowsePage({ type, title }: BrowsePageProps) {
   if (loading) return <LoadingSpinner />;
 
   return (
-    <main className="pt-32 pb-24 px-6 md:px-12 min-h-screen">
-      <header className="mb-10">
-        <h1 className="text-4xl font-black font-headline tracking-tight text-on-surface">
+    <main id="main-content" className="pt-20 md:pt-28 pb-20 md:pb-24 px-4 md:px-12 min-h-screen">
+      <header className="mb-8 md:mb-10">
+        <h1 className="text-3xl md:text-4xl font-black font-headline tracking-tight text-white">
           {title}
         </h1>
-        <p className="text-on-surface-variant mt-2">
+        <p className="text-neutral-500 mt-1.5 text-sm md:text-base">
           {filteredMovies.length} {type === 'songs' ? 'songs' : type === 'movies' ? 'movies' : type === 'tv-shows' ? 'TV shows' : 'titles'} available
         </p>
       </header>
 
-      {/* For Songs - show as grid */}
+      {/* Songs Grid */}
       {type === 'songs' && (
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-x-4 gap-y-8">
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-x-3 md:gap-x-4 gap-y-6 md:gap-y-8">
           {filteredMovies.map((movie) => (
-            <div 
-              key={movie.id} 
-              className="cursor-pointer group"
+            <button
+              key={movie.id}
+              className="group text-left focus-ring rounded-lg"
               onClick={() => handlePlay(movie)}
+              aria-label={`Play ${movie.title}`}
             >
-              <div className="relative aspect-square rounded-lg overflow-hidden mb-3">
+              <div className="relative aspect-square rounded-lg overflow-hidden mb-2 bg-surface-container">
                 <img
                   src={movie.thumbnail}
-                  alt={movie.title}
+                  alt=""
                   loading="lazy"
                   className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                   referrerPolicy="no-referrer"
                 />
                 <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                  <div className="w-12 h-12 rounded-full bg-white flex items-center justify-center">
-                    <div className="w-0 h-0 border-l-[12px] border-l-black border-t-[8px] border-t-transparent border-b-[8px] border-b-transparent ml-1" />
+                  <div className="w-12 h-12 rounded-full bg-white/90 flex items-center justify-center shadow-lg">
+                    <Play className="w-5 h-5 text-black fill-current ml-0.5" />
                   </div>
                 </div>
               </div>
-              <h3 className="font-headline font-bold text-sm text-on-surface truncate">
+              <h3 className="font-headline font-bold text-xs md:text-sm text-white truncate">
                 {movie.title}
               </h3>
-              <p className="font-body text-xs text-on-surface-variant mt-1">
-                {movie.year} • {movie.duration}
+              <p className="font-body text-[10px] md:text-xs text-neutral-500 mt-0.5">
+                {movie.year} · {movie.duration}
               </p>
-            </div>
+            </button>
           ))}
         </div>
       )}
 
-      {/* For Movies/TV Shows - show as rows */}
+      {/* Movies/TV Shows Rows */}
       {(type === 'movies' || type === 'tv-shows' || type === 'new-popular') && (
-        <div className="space-y-8">
-          {Object.entries(categorizedMovies).map(([category, categoryMovies]: [string, Movie[]]) => (
+        <div className="space-y-6 md:space-y-8">
+          {(Object.entries(categorizedMovies) as [string, Movie[]][]).map(([category, categoryMovies]) => (
             categoryMovies.length > 0 ? (
-              <div key={category}>
-                <MovieRow 
-                  title={category}
-                  movies={categoryMovies}
-                  onPlay={handlePlay}
-                  onInfo={handleInfo}
-                />
-              </div>
+              <MovieRow
+                key={category}
+                title={category}
+                movies={categoryMovies}
+                onPlay={handlePlay}
+                onInfo={handleInfo}
+              />
             ) : null
           ))}
-          
-          {/* Fallback if no category matches */}
+
           {Object.keys(categorizedMovies).length === 0 && filteredMovies.length > 0 && (
-            <MovieRow 
+            <MovieRow
               title="All"
               movies={filteredMovies}
               onPlay={handlePlay}
@@ -144,17 +135,20 @@ export default function BrowsePage({ type, title }: BrowsePageProps) {
         </div>
       )}
 
-      {/* Empty state */}
+      {/* Empty State */}
       {filteredMovies.length === 0 && (
         <div className="text-center py-20">
-          <p className="text-on-surface-variant text-xl">No content found</p>
-          <p className="text-on-surface-variant/60 mt-2">Check back later for new content</p>
+          <div className="w-16 h-16 rounded-full bg-surface-container mx-auto mb-4 flex items-center justify-center">
+            <Play className="w-8 h-8 text-neutral-600" />
+          </div>
+          <p className="text-neutral-400 text-lg font-medium">No content found</p>
+          <p className="text-neutral-600 mt-1 text-sm">Check back later for new content</p>
         </div>
       )}
 
-      <FullPlayer 
-        movie={selectedMovie} 
-        onClose={() => setSelectedMovie(null)} 
+      <FullPlayer
+        movie={selectedMovie}
+        onClose={() => setSelectedMovie(null)}
       />
 
       <DetailModal
