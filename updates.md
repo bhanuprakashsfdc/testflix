@@ -248,3 +248,40 @@ All changes made during the redesign based on Netflix/Hotstar front-end experien
 | `src/App.tsx` | Skip link, mobile nav, route transitions |
 | `src/context/MovieContext.tsx` | Error handling |
 | `src/utils/watchHistory.ts` | My List, likes tracking |
+
+---
+
+## [2026-03-29] Phase 12: Music Mode (JioSaavn/Wynk-style)
+
+### New Files Created
+
+| File | Purpose |
+|------|---------|
+| `src/context/MusicContext.tsx` | Global audio state - YouTube IFrame API playback, queue management, volume/mute, play next/prev, shuffle |
+| `src/components/MusicToggle.tsx` | Toggle button to enable/disable music mode (top-right, red when active) |
+| `src/components/MusicPlayer.tsx` | Bottom player bar (JioSaavn/Wynk style) + full-screen now playing overlay |
+| `src/components/MusicQueue.tsx` | Slide-out queue panel with Queue/Browse tabs, search, add/remove songs, animated equalizer |
+| `src/pages/MusicLibrary.tsx` | Full music browsing page with search, category filter tabs, song list, Play All |
+
+### Modified Files
+
+| File | Changes |
+|------|---------|
+| `src/App.tsx` | Wrapped with MusicProvider, added MusicToggle/MusicPlayer/MusicQueue, /music route, Music in mobile nav |
+
+### Music Mode Features
+- **Toggle**: Red pill button top-right, enables music mode
+- **Bottom Player**: Album art thumbnail, song title/artist, play/pause/prev/next, seek bar, volume, like, queue toggle, expand to full-screen
+- **Full-Screen Now Playing**: Large album artwork, blurred background, full playback controls, animated equalizer bars, volume slider, queue counter
+- **Queue Panel**: Slide-out from right, Queue tab (current queue with remove), Browse tab (all songs with search and add-to-queue)
+- **Music Library Page**: Search songs, filter by category, song list with track numbers, animated playing indicator, Play All, add-to-queue
+- **Auto-Next**: Automatically plays next song when current ends
+- **Keyboard**: Space to play/pause, arrow keys for seek/volume
+
+### How It Works
+1. Click "Music Mode" toggle button (top-right)
+2. Go to /music or click Music in nav
+3. Browse/search songs, click to play
+4. Bottom player bar appears with full controls
+5. Click queue icon to see/manage queue or browse all songs
+6. Click expand (up arrow) for full-screen now playing view
